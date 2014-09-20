@@ -1,6 +1,6 @@
+turtles-own[has_food]
 patches-own[num_of_food  pher_list] 
 ; pher_list, elements contain duration of evapration, its size is its number of pheromones
-turtles-own[has_food]
 
 to setup
   clear-all
@@ -46,7 +46,6 @@ to move-ants
     if (num_of_neighbours_to_left > 20 and num_of_neighbours_to_right > 20) [
       stop ; dont move
     ]
-    
     
     let x ((num_of_pher_to_left + num_of_pher_to_right) / 100.0) - 1
     let tanhx ( ( (e ^ (2 * x)) - 1 ) / ( (e ^ (2 * x)) + 1 ) )
@@ -133,7 +132,6 @@ to drop-off-food
   ask turtles[
     if( has_food = 1 and xcor = nestx and ycor = nesty)[
       set has_food 0
-      
     ]
   ]
 end
