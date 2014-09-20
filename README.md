@@ -1,6 +1,6 @@
 NetLogoFiles
 ============
 
-NetLog Files COMP 4107
+NetLog Files
 
 Assignment 1
