@@ -5,6 +5,7 @@ breed[fishes fish]
 
 fishes-own[happiness ; happiest in coral areas and temerature btw ? - ?
             ]
+
 jellies-own[energy]
 
 patches-own[temperature ; for water depends on depth current coral, for air = global-air-temperature
