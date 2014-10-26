@@ -1,12 +1,157 @@
+
+
+breed[jellies jelly]
+breed[fishes fish]
+
+fishes-own[happiness ; happiest in coral areas and temerature btw ? - ?
+            ]
+jellies-own[energy]
+
+patches-own[temperature ; for water depends on depth current coral, for air = global-air-temperature
+            depth       ; specific for water
+            current]    ; specific for water 
+
+globals[ air-temperature  ; 0 to 24 celcius
+         wind-strength ]  ; 0 to 3 changes per day where 0 is no wind 3 is lots of wind 
+
+to setup
+  clear-all
+  reset-ticks
+  setup-default-values
+  setup-patches
+  setup-jellies
+  setup-fishes
+end
+
+to setup-default-values
+  set air-temperature random 25
+  set wind-strength random 4
+end
+
+to go
+  tick
+  move-jellies
+  move-fish
+  update-environment
+end
+
+;ENVIRONMENT function
+
+to setup-patches
+  
+  let atmosphere-height 10
+  let sea-floor-height 5
+  let width-of-world 500
+  
+  resize-world 0 width-of-world 0 (atmosphere-height + sea-floor-height + water_depth) 
+  
+  
+  ask patches[
+    ;atmosphere
+    if(pycor > sea-floor-height + water_depth)[
+      set pcolor blue
+      set temperature air-temperature
+    ]
+    ;seafloor
+    if(pycor < sea-floor-height)[
+      set pcolor brown
+    ]
+    ;water
+    if(pycor >= sea-floor-height and pycor <= sea-floor-height + water_depth)[
+      set pcolor blue - 2
+      
+      set depth water_depth - (pycor - sea-floor-height) 
+      set temperature (getWaterTemperature depth)
+      set current (getWaterCurrent depth temperature)
+      
+
+      if pxcor = 1 [
+        set plabel round depth 
+      ]
+      if pxcor = 4 [
+        set plabel temperature 
+      ]
+      
+      if pxcor = 7[
+         set plabel current
+      ]
+      
+      
+    ]
+  ]
+  
+  
+  
+end
+
+to update-environment
+end
+
+
+to-report getWaterTemperature [water-depth] 
+  let rate-of-depreciation 10
+  
+  let result air-temperature - round (water-depth / rate-of-depreciation)
+  if result <= 4 [set result 4]  
+  report result
+end
+
+to-report getWaterCurrent [water-depth water-temp]
+  let rate-of-depreciation 10
+  
+  let result wind-strength - round (water-depth / rate-of-depreciation )
+  if result <= 0 [set result 0]  
+  report result
+  report 2
+end
+
+;JELLY functions
+to setup-jellies
+  create-jellies init_number_of_jellies[
+    set color white
+    set size 1.5
+    let rand-patch one-of patches with [pcolor = (blue - 2)]
+    set xcor [pxcor] of rand-patch
+    set ycor [pycor] of rand-patch
+    set heading 0 ; for now
+  ]
+end
+
+to move-jellies
+end
+
+;FISH functions
+to setup-fishes
+  create-fishes init_number_of_fish[
+    set color yellow
+    set size 1
+    let rand-patch one-of patches with [pcolor = (blue - 2)]
+    set xcor [pxcor] of rand-patch
+    set ycor [pycor] of rand-patch
+    ifelse random-float 1 > 0.5[
+        set heading 90
+    ][
+        set heading 270
+    ]
+  ]
+end
+
+to move-fish
+  ask fishes[
+    forward 1
+  ]
+end
+
+;UTILS
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-649
-470
-16
-16
-13.0
+7735
+506
+-1
+-1
+15.0
 1
 10
 1
@@ -14,17 +159,169 @@ GRAPHICS-WINDOW
 1
 0
 1
+0
 1
-1
--16
-16
--16
-16
+0
+500
+0
+30
 0
 0
 1
 ticks
 30.0
+
+SLIDER
+6
+56
+201
+89
+water_depth
+water_depth
+0
+300
+15
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+4
+10
+70
+43
+NIL
+setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+72
+10
+135
+43
+NIL
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+137
+10
+200
+43
+NIL
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+6
+379
+206
+529
+Number of Jellies vs Number of Fish
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count jellies"
+"pen-1" 1.0 0 -7500403 true "" "plot count fishes"
+
+SLIDER
+6
+123
+202
+156
+init_number_of_fish
+init_number_of_fish
+0
+1000
+1000
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+6
+89
+201
+122
+init_number_of_jellies
+init_number_of_jellies
+0
+500
+500
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+7
+171
+203
+204
+number_of_ticks_in_a_day
+number_of_ticks_in_a_day
+50
+5000
+50
+1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+17
+327
+67
+372
+Temp
+air-temperature
+17
+1
+11
+
+MONITOR
+72
+327
+122
+372
+Wind
+wind-strength
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
