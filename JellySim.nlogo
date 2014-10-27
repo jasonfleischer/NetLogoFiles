@@ -9,7 +9,7 @@ fishes-own[happiness ; happiest in coral areas and temerature btw ? - ?
     ;test comment
 jellies-own[energy]
 
-patches-own[temperature ; for water depends on depth current coral, for air = global-air-temperature
+patches-own[temperature ; for water depends on depth, for air = global-air-temperature
             depth       ; specific for water
             current]    ; specific for water 
 
@@ -149,11 +149,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-7735
-506
+1222
+673
 -1
 -1
-15.0
+2.0
 1
 10
 1
@@ -166,7 +166,7 @@ GRAPHICS-WINDOW
 0
 500
 0
-30
+315
 0
 0
 1
@@ -182,7 +182,7 @@ water_depth
 water_depth
 0
 300
-15
+300
 1
 1
 NIL
