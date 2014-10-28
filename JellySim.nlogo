@@ -7,13 +7,21 @@ fishes-own[happiness ; happiest in coral areas and temerature btw ? - ?
             ]
     
     ;test comment
-jellies-own[energy]
+jellies-own[
+            age
+            lifespan
+            
+            isdead
+            ticks_left ; in last day of life
+            ]
 
 patches-own[temperature ; for water depends on depth, for air = global-air-temperature
             depth       ; specific for water
             current]    ; specific for water 
 
-globals[ air-temperature  ; 0 to 24 celcius
+globals[ day 
+         sea-floor-height
+         air-temperature  ; 0 to 24 celcius
          wind-strength ]  ; 0 to 3 changes per day where 0 is no wind 3 is lots of wind 
 
 to setup
@@ -32,9 +40,11 @@ end
 
 to go
   tick
+  
   move-jellies
   move-fish
   update-environment
+  set day floor (ticks / number_of_ticks_in_a_day)
 end
 
 ;ENVIRONMENT function
@@ -42,11 +52,10 @@ end
 to setup-patches
   
   let atmosphere-height 10
-  let sea-floor-height 5
+  set sea-floor-height 5
   let width-of-world 500
   
   resize-world 0 width-of-world 0 (atmosphere-height + sea-floor-height + water_depth) 
-  
   
   ask patches[
     ;atmosphere
@@ -66,24 +75,21 @@ to setup-patches
       set temperature (getWaterTemperature depth)
       set current (getWaterCurrent depth temperature)
       
-
-      if pxcor = 1 [
-        set plabel round depth 
+      if show_labels[
+        if pxcor = 1 [
+          set plabel round depth 
+        ]
+        if pxcor = 4 [
+          set plabel temperature 
+        ]
+        
+        if pxcor = 7[
+          set plabel current
+        ]
       ]
-      if pxcor = 4 [
-        set plabel temperature 
-      ]
-      
-      if pxcor = 7[
-         set plabel current
-      ]
-      
-      
+         
     ]
   ]
-  
-  
-  
 end
 
 to update-environment
@@ -116,10 +122,60 @@ to setup-jellies
     set xcor [pxcor] of rand-patch
     set ycor [pycor] of rand-patch
     set heading 0 ; for now
+    set isdead false
+    set ticks_left -1 
+    set age (random max_life_span_of_jellies_in_days) 
+    set lifespan (random (max_life_span_of_jellies_in_days - age)) + age + 1
+    if age >= lifespan [
+      print "error1" 
+    ]
+    if  lifespan >  max_life_span_of_jellies_in_days[
+        print "error"    
+   ]
+    
   ]
 end
 
 to move-jellies
+  ask jellies[
+    
+    ifelse isdead[
+      ifelse [pcolor] of patch-ahead 1 = blue - 2 [
+      ;ifelse ycor > sea-floor-height[
+        forward 1
+      
+      ][
+        ask patch-here [ set pcolor red ] ; generate coral
+        die
+      ]
+      
+    ][
+       if day != floor (ticks / number_of_ticks_in_a_day)[ ; day change
+         
+         if color != violet[
+           set age age + 1
+         
+           if lifespan <= age[
+             set ticks_left (random (number_of_ticks_in_a_day - 1) + 2)
+             set color violet
+         ]
+         ] 
+       ]
+       if (age > lifespan)[
+         print "error"
+       ]
+       
+       if(( ticks mod ticks_left = 0 and color = violet)  )[
+          set heading 180
+          set color red 
+          set isdead true
+       ]
+    ]    
+    
+    
+    
+    
+  ]
 end
 
 ;FISH functions
@@ -130,6 +186,10 @@ to setup-fishes
     let rand-patch one-of patches with [pcolor = (blue - 2)]
     set xcor [pxcor] of rand-patch
     set ycor [pycor] of rand-patch
+    
+     
+    
+    
     ifelse random-float 1 > 0.5[
         set heading 90
     ][
@@ -149,11 +209,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-1222
-673
+3226
+419
 -1
 -1
-2.0
+6.0
 1
 10
 1
@@ -166,7 +226,7 @@ GRAPHICS-WINDOW
 0
 500
 0
-315
+62
 0
 0
 1
@@ -182,7 +242,7 @@ water_depth
 water_depth
 0
 300
-300
+47
 1
 1
 NIL
@@ -304,10 +364,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-17
-327
-67
-372
+90
+324
+140
+369
 Temp
 air-temperature
 17
@@ -315,15 +375,52 @@ air-temperature
 11
 
 MONITOR
-72
-327
-122
-372
+145
+324
+195
+369
 Wind
 wind-strength
 17
 1
 11
+
+MONITOR
+28
+324
+85
+369
+Day
+day
+17
+1
+11
+
+SWITCH
+38
+281
+170
+314
+show_labels
+show_labels
+1
+1
+-1000
+
+SLIDER
+7
+223
+199
+256
+max_life_span_of_jellies_in_days
+max_life_span_of_jellies_in_days
+0
+100
+50
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
