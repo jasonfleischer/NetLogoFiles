@@ -53,9 +53,9 @@ to setup-patches
   
   let atmosphere-height 10
   set sea-floor-height 5
-  let width-of-world 500
+  ;let width-of-world 500
   
-  resize-world 0 width-of-world 0 (atmosphere-height + sea-floor-height + water_depth) 
+  resize-world 0 width_of_world 0 (atmosphere-height + sea-floor-height + water_depth) 
   
   ask patches[
     ;atmosphere
@@ -151,14 +151,12 @@ to move-jellies
       
     ][
        if day != floor (ticks / number_of_ticks_in_a_day)[ ; day change
-         
          if color != violet[
            set age age + 1
-         
            if lifespan <= age[
              set ticks_left (random (number_of_ticks_in_a_day - 1) + 2)
              set color violet
-         ]
+           ]
          ] 
        ]
        if (age > lifespan)[
@@ -209,11 +207,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-3226
-419
+1230
+431
 -1
 -1
-6.0
+10.0
 1
 10
 1
@@ -224,9 +222,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-500
+100
 0
-62
+38
 0
 0
 1
@@ -240,9 +238,9 @@ SLIDER
 89
 water_depth
 water_depth
-0
+5
 300
-47
+23
 1
 1
 NIL
@@ -327,7 +325,7 @@ init_number_of_fish
 init_number_of_fish
 0
 1000
-1000
+105
 1
 1
 NIL
@@ -342,7 +340,7 @@ init_number_of_jellies
 init_number_of_jellies
 0
 500
-500
+47
 1
 1
 NIL
@@ -403,7 +401,7 @@ SWITCH
 314
 show_labels
 show_labels
-1
+0
 1
 -1000
 
@@ -417,6 +415,21 @@ max_life_span_of_jellies_in_days
 0
 100
 50
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+26
+266
+198
+299
+width_of_world
+width_of_world
+100
+500
+100
 1
 1
 NIL
