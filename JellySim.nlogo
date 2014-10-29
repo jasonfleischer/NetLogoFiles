@@ -9,16 +9,22 @@ fishes-own[happiness ; happiest in coral areas and temerature btw ? - ?
     ;test comment
 jellies-own[
             age
-            lifespan
+            lifespan ; in days
             
-            isdead
+            islarva
             ticks_left ; in last day of life
             ]
 
 patches-own[temperature ; for water depends on depth, for air = global-air-temperature
             depth       ; specific for water
-            current]    ; specific for water 
-
+            current     ; specific for water 
+            
+            ;is-seed          ; coral related
+            ;list-of-branches ; coral related for seed
+            ;max-height       ; coral related cannot grow more than x? spaces from surface 
+            
+            
+            ] 
 globals[ day 
          sea-floor-height
          air-temperature  ; 0 to 24 celcius
@@ -70,22 +76,14 @@ to setup-patches
     ;water
     if(pycor >= sea-floor-height and pycor <= sea-floor-height + water_depth)[
       set pcolor blue - 2
-      
       set depth water_depth - (pycor - sea-floor-height) 
       set temperature (getWaterTemperature depth)
       set current (getWaterCurrent depth temperature)
       
       if show_labels[
-        if pxcor = 1 [
-          set plabel round depth 
-        ]
-        if pxcor = 4 [
-          set plabel temperature 
-        ]
-        
-        if pxcor = 7[
-          set plabel current
-        ]
+        if pxcor = 1 [ set plabel round depth ]
+        if pxcor = 4 [ set plabel temperature ] 
+        if pxcor = 7 [ set plabel current ]
       ]
          
     ]
@@ -119,10 +117,14 @@ to setup-jellies
     set color white
     set size 1.5
     let rand-patch one-of patches with [pcolor = (blue - 2)]
+    while [not any? turtles-here] [
+      set rand-patch one-of patches with [pcolor = (blue - 2)]
+    ]
+    
     set xcor [pxcor] of rand-patch
     set ycor [pycor] of rand-patch
     set heading 0 ; for now
-    set isdead false
+    set islarva false
     set ticks_left -1 
     set age (random max_life_span_of_jellies_in_days) 
     set lifespan (random (max_life_span_of_jellies_in_days - age)) + age + 1
@@ -139,17 +141,31 @@ end
 to move-jellies
   ask jellies[
     
-    ifelse isdead[
+    ifelse islarva[
       ifelse [pcolor] of patch-ahead 1 = blue - 2 [
       ;ifelse ycor > sea-floor-height[
         forward 1
       
       ][
-        ask patch-here [ set pcolor red ] ; generate coral
+        ;let patch-below patch-at 0 -1
+        
+        ;print [pcolor] of patch-below
+        ask patch-here [ ; generate polyp
+          
+          set pcolor red - 2 
+          
+        
+        ] 
         die
       ]
       
     ][
+    
+       if any? fishes-here[ ; eat
+          ask one-of fishes-here [ die ]
+          set lifespan min list (lifespan + 2) max_life_span_of_jellies_in_days
+       ]
+    
        if day != floor (ticks / number_of_ticks_in_a_day)[ ; day change
          if color != violet[
            set age age + 1
@@ -166,7 +182,7 @@ to move-jellies
        if(( ticks mod ticks_left = 0 and color = violet)  )[
           set heading 180
           set color red 
-          set isdead true
+          set islarva true
        ]
     ]    
     
@@ -182,6 +198,9 @@ to setup-fishes
     set color yellow
     set size 1
     let rand-patch one-of patches with [pcolor = (blue - 2)]
+    while [not any? turtles-here] [
+      set rand-patch one-of patches with [pcolor = (blue - 2)]
+    ]
     set xcor [pxcor] of rand-patch
     set ycor [pycor] of rand-patch
     
@@ -198,7 +217,16 @@ end
 
 to move-fish
   ask fishes[
-    forward 1
+    let rand-float random-float 1
+    let num-of-fishes-ahead 0
+    ask patch-ahead 1 [ set num-of-fishes-ahead (count fishes-here) ]  
+    ifelse num-of-fishes-ahead > 0 or rand-float < 0.1 [ ; turn-around
+      set heading heading - 180
+    ][; move-forwar
+    
+      ;if-else
+      forward 1
+    ]
   ]
 end
 
@@ -318,14 +346,14 @@ PENS
 
 SLIDER
 6
-123
+159
 202
-156
+192
 init_number_of_fish
 init_number_of_fish
 0
 1000
-105
+14
 1
 1
 NIL
@@ -333,24 +361,24 @@ HORIZONTAL
 
 SLIDER
 6
-89
+125
 201
-122
+158
 init_number_of_jellies
 init_number_of_jellies
 0
 500
-47
+144
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-7
-171
-203
+8
+198
 204
+231
 number_of_ticks_in_a_day
 number_of_ticks_in_a_day
 50
@@ -406,10 +434,10 @@ show_labels
 -1000
 
 SLIDER
-7
-223
-199
-256
+8
+234
+200
+267
 max_life_span_of_jellies_in_days
 max_life_span_of_jellies_in_days
 0
@@ -421,10 +449,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-26
-266
-198
-299
+6
+90
+202
+123
 width_of_world
 width_of_world
 100
