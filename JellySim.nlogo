@@ -2,19 +2,18 @@ breed[jellies jelly]
 breed[fishes fish]
 
 fishes-own[;happiness ; happiest in coral areas and temerature btw ? - ?
-  flockmates         ;; agentset of nearby turtles
-  nearest-neighbor   ;; closest one of our flockmates
-]
+           flockmates         ;; agentset of nearby turtles
+           nearest-neighbor   ;; closest one of our flockmates
+           ]
     
-    ;test comment
 jellies-own[
             age
             lifespan ; in days
             number-of-fish-eaten
             max-turn-radius
             
-            islarva
-            ticks_left ; in last day of life
+            is-larva
+            ticks-left ; in last day of life
             ]
 
 patches-own[temperature ; for water depends on depth, for air = global-air-temperature
@@ -80,17 +79,15 @@ to setup-patches
   resize-world 0 width_of_world 0 (atmosphere-height + sea-floor-height + water_depth) 
   
   ask patches[
-    ;atmosphere
-    if(pycor > sea-floor-height + water_depth)[
+    
+    if(pycor > sea-floor-height + water_depth)[ ;atmosphere
       set pcolor blue
       set temperature air-temperature
     ]
-    ;seafloor
-    if(pycor < sea-floor-height)[
+    if(pycor < sea-floor-height)[ ;seafloor
       set pcolor brown
     ]
-    ;water
-    if(pycor >= sea-floor-height and pycor <= sea-floor-height + water_depth)[
+    if(pycor >= sea-floor-height and pycor <= sea-floor-height + water_depth)[ ;water
       set pcolor blue - 2
       set depth water_depth - (pycor - sea-floor-height) 
       set temperature (getWaterTemperature depth)
@@ -108,18 +105,18 @@ end
 to update-environment
   
   ask patches [
-     if (pcolor = (red - 2)) and ( ticks mod (max_life_span_of_jellies_in_days * number_of_ticks_in_a_day) = 0 )[ ; spawn jellies at same time, every max jelly life span
+     if (pcolor = (red - 2)) and ( ticks mod (max_life_span_of_jellies * number_of_ticks_in_a_day) = 0 )[ ; spawn jellies at same time, every max jelly life span
        set pcolor blue - 2
        sprout-jellies 1[
           set color white
           set heading 0
           set size 1.5
-          set islarva false
+          set is-larva false
           set max-turn-radius (random maximum-jelly-turn-radius) + 1
           set number-of-fish-eaten 0
-          set ticks_left -1 
-          set age (random max_life_span_of_jellies_in_days) 
-          set lifespan (random (max_life_span_of_jellies_in_days - age)) + age + 1
+          set ticks-left -1 
+          set age (random max_life_span_of_jellies) 
+          set lifespan (random (max_life_span_of_jellies - age)) + age + 1
        ]
      ]   
   ]
@@ -154,16 +151,16 @@ to setup-jellies
     set xcor [pxcor] of rand-patch
     set ycor [pycor] of rand-patch
     set heading 0 ; for now
-    set islarva false
+    set is-larva false
     set max-turn-radius (random maximum-jelly-turn-radius) + 1
     set number-of-fish-eaten 0
-    set ticks_left -1 
-    set age (random max_life_span_of_jellies_in_days) 
-    set lifespan (random (max_life_span_of_jellies_in_days - age)) + age + 1
+    set ticks-left -1 
+    set age (random max_life_span_of_jellies) 
+    set lifespan (random (max_life_span_of_jellies - age)) + age + 1
     if age >= lifespan [ ; remove later
       print "error1" 
     ]
-    if  lifespan >  max_life_span_of_jellies_in_days[ ; remove later
+    if  lifespan >  max_life_span_of_jellies [ ; remove later
         print "error"    
     ]
   ]
@@ -172,7 +169,7 @@ end
 to move-jellies
   ask jellies[
     
-    ifelse islarva[
+    ifelse is-larva[
       ifelse [pcolor] of patch-ahead 1 = blue - 2 [
         forward 1
       ][
@@ -205,14 +202,14 @@ to move-jellies
        if any? fishes-here[ ; eat
           set number-of-fish-eaten number-of-fish-eaten + 1
           ask one-of fishes-here [ die ]
-          set lifespan min list (lifespan + 2) max_life_span_of_jellies_in_days
+          set lifespan min list (lifespan + 2) max_life_span_of_jellies
        ]
     
        if day != floor (ticks / number_of_ticks_in_a_day)[ ; day change
          if color != violet[
            set age age + 1
            if lifespan <= age[
-             set ticks_left (random (number_of_ticks_in_a_day - 1) + 2)
+             set ticks-left (random (number_of_ticks_in_a_day - 1) + 2)
              set color violet
            ]
          ] 
@@ -221,10 +218,10 @@ to move-jellies
          print "error"
        ]
        
-       if(( ticks mod ticks_left = 0 and color = violet)  )[
+       if(( ticks mod ticks-left = 0 and color = violet)  )[
           set heading 180
           set color red 
-          set islarva true
+          set is-larva true
        ]
     ]    
   ]
@@ -279,22 +276,19 @@ to find-nearest-neighbor ;; turtle procedure
   set nearest-neighbor min-one-of flockmates [distance myself]
 end
 
-;;; SEPARATE
-
-to separate  ;; turtle procedure
+to separate  
   turn-away ([heading] of nearest-neighbor) max-separate-turn
 end
 
-;;; ALIGN
-
-to align  ;; turtle procedure
+to align 
   turn-towards average-flockmate-heading max-align-turn
 end
 
-to-report average-flockmate-heading  ;; turtle procedure
-  ;; We can't just average the heading variables here.
-  ;; For example, the average of 1 and 359 should be 0,
-  ;; not 180.  So we have to use trigonometry.
+to cohere  
+  turn-towards average-heading-towards-flockmates max-cohere-turn
+end
+
+to-report average-flockmate-heading  
   let x-component sum [dx] of flockmates
   let y-component sum [dy] of flockmates
   ifelse x-component = 0 and y-component = 0
@@ -302,16 +296,7 @@ to-report average-flockmate-heading  ;; turtle procedure
     [ report atan x-component y-component ]
 end
 
-;;; COHERE
-
-to cohere  ;; turtle procedure
-  turn-towards average-heading-towards-flockmates max-cohere-turn
-end
-
-to-report average-heading-towards-flockmates  ;; turtle procedure
-  ;; "towards myself" gives us the heading from the other turtle
-  ;; to me, but we want the heading from me to the other turtle,
-  ;; so we add 180
+to-report average-heading-towards-flockmates  
   let x-component mean [sin (towards myself + 180)] of flockmates
   let y-component mean [cos (towards myself + 180)] of flockmates
   ifelse x-component = 0 and y-component = 0
@@ -319,19 +304,15 @@ to-report average-heading-towards-flockmates  ;; turtle procedure
     [ report atan x-component y-component ]
 end
 
-;;; HELPER PROCEDURES
-
-to turn-towards [new-heading max-turn]  ;; turtle procedure
+to turn-towards [new-heading max-turn] 
   turn-at-most (subtract-headings new-heading heading) max-turn
 end
 
-to turn-away [new-heading max-turn]  ;; turtle procedure
+to turn-away [new-heading max-turn]  
   turn-at-most (subtract-headings heading new-heading) max-turn
 end
 
-;; turn right by "turn" degrees (or left if "turn" is negative),
-;; but never turn more than "max-turn" degrees
-to turn-at-most [turn max-turn]  ;; turtle procedure
+to turn-at-most [turn max-turn]  
   ifelse abs turn > max-turn
     [ ifelse turn > 0
         [ rt max-turn ]
@@ -545,10 +526,10 @@ show_labels
 SLIDER
 7
 277
-199
+210
 310
-max_life_span_of_jellies_in_days
-max_life_span_of_jellies_in_days
+max_life_span_of_jellies
+max_life_span_of_jellies
 0
 100
 50
