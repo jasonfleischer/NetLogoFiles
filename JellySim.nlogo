@@ -1,36 +1,14 @@
 breed[jellies jelly]
 breed[fishes fish]
 
-fishes-own[;happiness ; happiest in coral areas and temerature btw ? - ?
-           flockmates         ;; agentset of nearby turtles
-           nearest-neighbor   ;; closest one of our flockmates
-           ]
-    
-jellies-own[
-            age
-            lifespan ; in days
-            number-of-fish-eaten
-            max-turn-radius
-            
-            is-larva
-            ticks-left ; in last day of life
-            ]
-
-patches-own[temperature ; for water depends on depth, for air = global-air-temperature
-            depth       ; specific for water
-            current     ; specific for water 
-            
-            ;is-seed          ; coral related
-            ;list-of-branches ; coral related for seed
-            ;max-height       ; coral related cannot grow more than x? spaces from surface 
-            
-            
-            ] 
 globals[ day 
          sea-floor-height
-         air-temperature  ; 0 to 24 celcius
-         wind-strength   ; 0 to 3 changes per day where 0 is no wind 3 is lots of wind 
+         air-temperature      ; 0 to 24 celcius
+         wind-strength        ; 0 to 3 changes per day where 0 is no wind 3 is lots of wind 
          maximum-jelly-turn-radius
+         
+         
+
                   
          ;flocking variables for fish
          minimum-separation
@@ -39,6 +17,37 @@ globals[ day
          max-align-turn
          max-cohere-turn
 ]
+
+fishes-own[happiness          ; happiest in coral areas and temerature btw effects reproduction ? - ?
+           
+           age                ; in days
+           lifespan           ; in days
+           
+           is-female
+           pregnant-due-date ; in ticks
+  
+           flockmates         ; agentset of nearby fish
+           nearest-neighbor   ; closest one of our flockmates
+]
+    
+jellies-own[
+            age               ; in days
+            lifespan          ; in days
+            
+            number-of-fish-eaten
+            max-turn-radius
+            is-larva
+            ticks-left        ; in last day of life
+]
+
+patches-own[temperature       ; for water depends on depth, for air = global-air-temperature
+            depth             ; specific for water
+            current           ; specific for water 
+            
+            ;is-seed          ; coral related
+            ;list-of-branches ; coral related for seeds
+            ;max-growth       ; coral related cannot grow more than x? patches 
+] 
 
 to setup
   clear-all
@@ -197,9 +206,8 @@ to move-jellies
        if ticks mod 5 = 0  and  [pcolor] of patch-ahead 1 = blue - 2 [ ; move every 5 ticks if possible
           forward 1
        ]
-      
     
-       if any? fishes-here[ ; eat
+       if any? fishes-here [ ; eat
           set number-of-fish-eaten number-of-fish-eaten + 1
           ask one-of fishes-here [ die ]
           set lifespan min list (lifespan + 2) max_life_span_of_jellies
@@ -230,7 +238,7 @@ end
 ;FISH functions
 to setup-fishes
   create-fishes init_number_of_fish[
-    set color yellow
+    
     set size 1
     let rand-patch one-of patches with [pcolor = (blue - 2)]
     while [not any? turtles-here] [
@@ -239,12 +247,84 @@ to setup-fishes
     set xcor [pxcor] of rand-patch
     set ycor [pycor] of rand-patch
     
-    set heading (random 20) + 85
+    ifelse random-float 1 > 0.5 [ ; male
+      set is-female false
+      set color yellow - 2
+    ][ ; female
+      set is-female true
+      set color yellow
+    ]
+    
+    set heading (random 20) + 85 ; 85 to 105 degrees
+    
+    set age (random max_life_span_of_fishes) 
+    set lifespan (random (max_life_span_of_fishes - age)) + age + 1
+    if age >= lifespan [ ; remove later
+      print "error1" 
+    ]
+    if  lifespan >  max_life_span_of_fishes [ ; remove later
+        print "error"    
+    ]
   ]
 end
 
 to move-fish  
   ask fishes [ 
+    
+    if day != floor (ticks / number_of_ticks_in_a_day)[ ; day change
+        set age age + 1
+    ]
+    
+    if lifespan <= age[ ; die
+        die
+        stop;
+        ;set ticks-left (random (number_of_ticks_in_a_day - 1) + 2)
+        ;set color violet
+    ]
+    
+    if is-female and color != pink [ ; get pregnant
+      if flockmates != 0 [
+        if any? flockmates and nearest-neighbor != nobody [ 
+          if 
+          count flockmates >= 2 and count flockmates < 10 and
+          age > max_life_span_of_fishes * .5  and [age] of nearest-neighbor > max_life_span_of_fishes * .5 and
+          age < max_life_span_of_fishes * .75 and [age] of nearest-neighbor < max_life_span_of_fishes * .75 and
+          not [is-female] of nearest-neighbor 
+          [ 
+            
+            set pregnant-due-date (ceiling (0.01 * max_life_span_of_fishes)) * number_of_ticks_in_a_day
+            set color pink
+         
+          ] 
+        ]
+      ]
+    ]
+    
+    if color = pink [ ; gestation
+    
+      set pregnant-due-date pregnant-due-date - 1
+      if pregnant-due-date = 0[
+         let num_of_offspring (random 4) + 2 ; todo more if happier
+         hatch-fishes num_of_offspring [ ; give birth
+           set size 1
+           ifelse random-float 1 > 0.5 [ ; male
+              set is-female false
+              set color yellow - 2
+           ][ ; female
+              set is-female true
+              set color yellow
+           ]
+           set heading (random 20) + 85 ; 85 to 105 degrees
+           set age 0
+           set lifespan (random max_life_span_of_fishes) + 1
+         ]
+         
+         set color yellow
+      ]
+    ]
+    
+    
+    
     ifelse [pcolor] of patch-ahead 1 != blue - 2 [
       ifelse heading > 90[
         set heading 80
@@ -279,11 +359,9 @@ end
 to separate  
   turn-away ([heading] of nearest-neighbor) max-separate-turn
 end
-
 to align 
   turn-towards average-flockmate-heading max-align-turn
 end
-
 to cohere  
   turn-towards average-heading-towards-flockmates max-cohere-turn
 end
@@ -320,7 +398,7 @@ to turn-at-most [turn max-turn]
     [ rt turn ]
 end
 
-; end of fish
+; end of fish functions
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -416,10 +494,10 @@ NIL
 1
 
 PLOT
-6
-379
-206
-529
+8
+353
+202
+503
 Number of Jellies vs Number of Fish
 NIL
 NIL
@@ -443,7 +521,7 @@ init_number_of_fish
 init_number_of_fish
 0
 1000
-260
+1000
 1
 1
 NIL
@@ -458,7 +536,7 @@ init_number_of_jellies
 init_number_of_jellies
 0
 500
-2
+0
 1
 1
 NIL
@@ -480,10 +558,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-90
-324
-140
-369
+62
+507
+112
+552
 Temp
 air-temperature
 17
@@ -491,10 +569,10 @@ air-temperature
 11
 
 MONITOR
-145
-324
-195
-369
+117
+507
+167
+552
 Wind
 wind-strength
 17
@@ -502,10 +580,10 @@ wind-strength
 11
 
 MONITOR
-36
-324
-86
-369
+8
+507
+58
+552
 Day
 day
 17
@@ -514,9 +592,9 @@ day
 
 SWITCH
 8
-537
+556
 125
-570
+589
 show_labels
 show_labels
 1
@@ -526,13 +604,13 @@ show_labels
 SLIDER
 7
 277
-210
+202
 310
 max_life_span_of_jellies
 max_life_span_of_jellies
 0
 100
-50
+43
 1
 1
 NIL
@@ -541,7 +619,7 @@ HORIZONTAL
 SLIDER
 6
 90
-202
+201
 123
 width_of_world
 width_of_world
@@ -554,7 +632,7 @@ NIL
 HORIZONTAL
 
 SLIDER
-4
+6
 197
 202
 230
@@ -563,6 +641,21 @@ percentage_of_coral
 0
 100
 50
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+7
+314
+202
+347
+max_life_span_of_fishes
+max_life_span_of_fishes
+10
+100
+30
 1
 1
 NIL
