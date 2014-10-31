@@ -6,10 +6,7 @@ globals[ day
          air-temperature      ; 0 to 24 celcius
          wind-strength        ; 0 to 3 changes per day where 0 is no wind 3 is lots of wind 
          maximum-jelly-turn-radius
-         
-         
-
-                  
+             
          ;flocking variables for fish
          minimum-separation
          vision
@@ -41,8 +38,8 @@ jellies-own[
 ]
 
 patches-own[temperature       ; for water depends on depth, for air = global-air-temperature
-            depth             ; specific for water
-            current           ; specific for water 
+            depth             ; specific for water ; every patch down increases by one
+            current           ; specific for water ; 0 to 3 changes per day where 0 is no currrent 3 is lots of current
             
             ;is-seed          ; coral related
             ;list-of-branches ; coral related for seeds
@@ -97,7 +94,7 @@ to setup-patches
       set pcolor brown
     ]
     if(pycor >= sea-floor-height and pycor <= sea-floor-height + water_depth)[ ;water
-      set pcolor blue - 2
+      
       set depth water_depth - (pycor - sea-floor-height) 
       set temperature (getWaterTemperature depth)
       set current (getWaterCurrent depth temperature)
@@ -107,6 +104,15 @@ to setup-patches
         if pxcor = 4 [ set plabel temperature ] 
         if pxcor = 7 [ set plabel current ]
       ]    
+      
+      ifelse show_current[
+         if current = 3[ set pcolor blue - 4 ]
+         if current = 2[ set pcolor blue - 3 ]
+         if current = 1[ set pcolor blue - 2 ]
+         if current = 0[ set pcolor blue - 1 ]
+      ][
+         set pcolor blue - 2
+      ] 
     ]
   ]
 end
@@ -128,6 +134,15 @@ to update-environment
           set lifespan (random (max_life_span_of_jellies - age)) + age + 1
        ]
      ]   
+     
+     if isWater pcolor [
+       if show_current[
+         if current = 3[ set pcolor blue - 4 ]
+         if current = 2[ set pcolor blue - 3 ]
+         if current = 1[ set pcolor blue - 2 ]
+         if current = 0[ set pcolor blue - 1 ]
+       ]
+     ]
   ]
 end
 
@@ -147,14 +162,22 @@ to-report getWaterCurrent [water-depth water-temp]
   report 2
 end
 
+to-report isWater [colour]
+  ifelse show_current[
+     report colour = blue - 4 or colour = blue - 3 or colour = blue - 2 or colour = blue - 1
+  ][
+     report colour = blue - 2
+  ]
+end
+
 ;JELLY functions
 to setup-jellies
   create-jellies init_number_of_jellies[
     set color white
     set size 1.5
-    let rand-patch one-of patches with [pcolor = (blue - 2)]
+    let rand-patch one-of patches with [isWater pcolor]
     while [not any? turtles-here] [
-      set rand-patch one-of patches with [pcolor = (blue - 2)]
+      set rand-patch one-of patches with [isWater pcolor]
     ]
     
     set xcor [pxcor] of rand-patch
@@ -179,7 +202,7 @@ to move-jellies
   ask jellies[
     
     ifelse is-larva[
-      ifelse [pcolor] of patch-ahead 1 = blue - 2 [
+      ifelse isWater [pcolor] of patch-ahead 1  [
         forward 1
       ][
         if number-of-fish-eaten > 5 [
@@ -193,7 +216,7 @@ to move-jellies
     ][ ; if jelly
     
        if ticks mod 4 = 0  [ ; turn every 4 ticks
-          ifelse [pcolor] of patch-ahead 1 != blue - 2 [
+          ifelse not isWater [pcolor] of patch-ahead 1 [
            set heading heading - 180
          ][
            ifelse random-float 1 > 0.5[
@@ -203,7 +226,7 @@ to move-jellies
            ]
          ]
        ]
-       if ticks mod 5 = 0  and  [pcolor] of patch-ahead 1 = blue - 2 [ ; move every 5 ticks if possible
+       if ticks mod 5 = 0  and  isWater [pcolor] of patch-ahead 1  [ ; move every 5 ticks if possible
           forward 1
        ]
     
@@ -240,9 +263,9 @@ to setup-fishes
   create-fishes init_number_of_fish[
     
     set size 1
-    let rand-patch one-of patches with [pcolor = (blue - 2)]
+    let rand-patch one-of patches with [isWater pcolor]
     while [not any? turtles-here] [
-      set rand-patch one-of patches with [pcolor = (blue - 2)]
+      set rand-patch one-of patches with [isWater pcolor]
     ]
     set xcor [pxcor] of rand-patch
     set ycor [pycor] of rand-patch
@@ -304,7 +327,7 @@ to move-fish
     
       set pregnant-due-date pregnant-due-date - 1
       if pregnant-due-date = 0[
-         let num_of_offspring (random 4) + 2 ; todo more if happier
+         let num_of_offspring (random 4) + 3 ; todo more if happier
          hatch-fishes num_of_offspring [ ; give birth
            set size 1
            ifelse random-float 1 > 0.5 [ ; male
@@ -325,7 +348,7 @@ to move-fish
     
     
     
-    ifelse [pcolor] of patch-ahead 1 != blue - 2 [
+    ifelse not isWater [pcolor] of patch-ahead 1 [
       ifelse heading > 90[
         set heading 80
       ][
@@ -535,8 +558,8 @@ SLIDER
 init_number_of_jellies
 init_number_of_jellies
 0
-500
-0
+300
+12
 1
 1
 NIL
@@ -597,7 +620,7 @@ SWITCH
 589
 show_labels
 show_labels
-1
+0
 1
 -1000
 
@@ -610,7 +633,7 @@ max_life_span_of_jellies
 max_life_span_of_jellies
 0
 100
-43
+10
 1
 1
 NIL
@@ -655,11 +678,22 @@ max_life_span_of_fishes
 max_life_span_of_fishes
 10
 100
-30
+31
 1
 1
 NIL
 HORIZONTAL
+
+SWITCH
+8
+592
+133
+625
+show_current
+show_current
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
