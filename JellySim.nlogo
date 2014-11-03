@@ -1,12 +1,13 @@
-breed[jellies jelly]
-breed[fishes fish]
+breed[ jellies jelly ]
+breed[ fishes fish ]
+
+; Note: Variables explained in write up
 
 globals[ day 
          sea-floor-height
-         air-temperature      ; 0 to 24 celcius
-         wind-strength        ; 0 to 3 changes per day where 0 is no wind 3 is lots of wind 
+         air-temperature      
+         wind-strength         
          maximum-jelly-turn-radius
-             
          ;flocking variables for fish
          minimum-separation
          vision
@@ -15,35 +16,30 @@ globals[ day
          max-cohere-turn
 ]
 
-fishes-own[happiness          ; happiest in coral areas and temerature btw effects reproduction ? - ?
-           
-           age                ; in days
-           lifespan           ; in days
-           
+fishes-own[happiness          ; ?? may remove
+           age                
+           lifespan           
            is-female
-           pregnant-due-date ; in ticks
-  
-           flockmates         ; agentset of nearby fish
-           nearest-neighbor   ; closest one of our flockmates
+           pregnant-due-date 
+           flock-mates         
+           nearest-neighbor   
 ]
     
-jellies-own[
-            age               ; in days
-            lifespan          ; in days
-            
+jellies-own[age               
+            lifespan            
             number-of-fish-eaten
             max-turn-radius
             is-larva
-            ticks-left        ; in last day of life
+            ticks-left        
 ]
 
-patches-own[temperature       ; for water depends on depth, for air = global-air-temperature
-            depth             ; specific for water ; every patch down increases by one
-            current           ; specific for water ; 0 to 3 changes per day where 0 is no currrent 3 is lots of current
-            
-            is-seed          ; coral related
-            list-of-branches ; coral related for seeds
-            max-growth       ; coral related cannot grow more than x? patches 
+patches-own[temperature      
+            depth             
+            current           
+            ; coral related        
+            is-seed          
+            list-of-branches 
+            max-growth       
             coral-colour
 ] 
 
@@ -362,10 +358,10 @@ to move-fish
     ]
     
     if is-female and color != pink [ ; get pregnant
-      if flockmates != 0 [
-        if any? flockmates and nearest-neighbor != nobody [ 
+      if flock-mates != 0 [
+        if any? flock-mates and nearest-neighbor != nobody [ 
           if 
-          count flockmates >= 2 and count flockmates < 10 and
+          count flock-mates >= 2 and count flock-mates < 10 and
           age > max_life_span_of_fishes * .5  and [age] of nearest-neighbor > max_life_span_of_fishes * .5 and
           age < max_life_span_of_fishes * .75 and [age] of nearest-neighbor < max_life_span_of_fishes * .75 and
           not [is-female] of nearest-neighbor 
@@ -402,8 +398,6 @@ to move-fish
       ]
     ]
     
-    
-    
     ifelse  isWater [pcolor] of patch-ahead 1  or isCoral [pcolor] of patch-ahead 1 [
       flock
       
@@ -420,7 +414,7 @@ end
 
 to flock  ;; turtle procedure
   find-flockmates
-  if any? flockmates
+  if any? flock-mates
     [ find-nearest-neighbor
       ifelse distance nearest-neighbor < minimum-separation
         [ separate ]
@@ -429,11 +423,11 @@ to flock  ;; turtle procedure
 end
 
 to find-flockmates  ;; turtle procedure
-  set flockmates other fishes in-radius vision
+  set flock-mates other fishes in-radius vision
 end
 
 to find-nearest-neighbor ;; turtle procedure
-  set nearest-neighbor min-one-of flockmates [distance myself]
+  set nearest-neighbor min-one-of flock-mates [distance myself]
 end
 
 to separate  
@@ -447,16 +441,16 @@ to cohere
 end
 
 to-report average-flockmate-heading  
-  let x-component sum [dx] of flockmates
-  let y-component sum [dy] of flockmates
+  let x-component sum [dx] of flock-mates
+  let y-component sum [dy] of flock-mates
   ifelse x-component = 0 and y-component = 0
     [ report heading ]
     [ report atan x-component y-component ]
 end
 
 to-report average-heading-towards-flockmates  
-  let x-component mean [sin (towards myself + 180)] of flockmates
-  let y-component mean [cos (towards myself + 180)] of flockmates
+  let x-component mean [sin (towards myself + 180)] of flock-mates
+  let y-component mean [cos (towards myself + 180)] of flock-mates
   ifelse x-component = 0 and y-component = 0
     [ report heading ]
     [ report atan x-component y-component ]
@@ -678,7 +672,7 @@ SWITCH
 589
 show_labels
 show_labels
-0
+1
 1
 -1000
 
