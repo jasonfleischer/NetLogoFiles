@@ -41,9 +41,10 @@ patches-own[temperature       ; for water depends on depth, for air = global-air
             depth             ; specific for water ; every patch down increases by one
             current           ; specific for water ; 0 to 3 changes per day where 0 is no currrent 3 is lots of current
             
-            ;is-seed          ; coral related
-            ;list-of-branches ; coral related for seeds
-            ;max-growth       ; coral related cannot grow more than x? patches 
+            is-seed          ; coral related
+            list-of-branches ; coral related for seeds
+            max-growth       ; coral related cannot grow more than x? patches 
+            coral-colour
 ] 
 
 to setup
@@ -58,7 +59,7 @@ end
 to setup-default-values
   set air-temperature random 25
   set wind-strength random 4
-  set sea-floor-height 5
+  set sea-floor-height 3
   set maximum-jelly-turn-radius 45
   
   ;flocking vars
@@ -81,8 +82,10 @@ end
 
 to setup-patches
   
-  let atmosphere-height 10
+  let atmosphere-height 5
   resize-world 0 width_of_world 0 (atmosphere-height + sea-floor-height + water_depth) 
+  
+  let num-of-seeds floor (percentage_of_coral / 100 * (width_of_world + 1))
   
   ask patches[
     
@@ -114,24 +117,36 @@ to setup-patches
          set pcolor blue - 2
       ] 
     ]
+    
+    set is-seed false
+    if pycor = sea-floor-height - 1 and pcolor = brown and num-of-seeds > 0[ ; coral
+      set pcolor brown - 1
+      set num-of-seeds num-of-seeds - 1
+      set is-seed true
+      set list-of-branches []
+      set max-growth 200 ; todo fix
+      set coral-colour green + (random 5) 
+    ]
   ]
 end
 
 to update-environment
   
   ask patches [
-     if (pcolor = (red - 2)) and ( ticks mod (max_life_span_of_jellies * number_of_ticks_in_a_day) = 0 )[ ; spawn jellies at same time, every max jelly life span
+     if (pcolor = (red - 2)) and ( ticks mod (max_life_span_of_jellies * number_of_ticks_in_a_day * 2) = 0 )[ ; spawn jellies at same time, every max jelly life span * 2
        set pcolor blue - 2
-       sprout-jellies 1[
-          set color white
-          set heading 0
-          set size 1.5
-          set is-larva false
-          set max-turn-radius (random maximum-jelly-turn-radius) + 1
-          set number-of-fish-eaten 0
-          set ticks-left -1 
-          set age (random max_life_span_of_jellies) 
-          set lifespan (random (max_life_span_of_jellies - age)) + age + 1
+       if not isCoral patch pxcor (pycor + 1) [ ; todo
+         sprout-jellies 1[
+           set color white
+           set heading 0
+           set size 1.5
+           set is-larva false
+           set max-turn-radius (random maximum-jelly-turn-radius) + 1
+           set number-of-fish-eaten 0
+           set ticks-left -1 
+           set age (random max_life_span_of_jellies) 
+           set lifespan (random (max_life_span_of_jellies - age)) + age + 1
+         ]
        ]
      ]   
      
@@ -141,6 +156,40 @@ to update-environment
          if current = 2[ set pcolor blue - 3 ]
          if current = 1[ set pcolor blue - 2 ]
          if current = 0[ set pcolor blue - 1 ]
+       ]
+     ]
+     
+     if is-seed and ticks mod 10 = 0[ ; try to grow every 10 ticks
+       if length list-of-branches < max-growth[ 
+       
+         let branch nobody
+         
+         ifelse empty? list-of-branches[
+           set branch ( patch pxcor (pycor + 1))
+           
+           
+         ][
+           ifelse random-float 1 > 0.5 [ ;grow vertically
+              set branch ( one-of list-of-branches )
+              set branch patch ([pxcor] of branch) (([pycor] of branch) + 1)
+           ][ ; grow horizontally
+              set branch ( one-of list-of-branches )
+              ifelse random-float 1 > 0.5[
+                set branch patch (([pxcor] of branch)+ 1) ([pycor] of branch)
+              ][
+                set branch patch (([pxcor] of branch)- 1) ([pycor] of branch)
+              ]
+           ]
+         
+        ]
+         
+         if isWater [pcolor] of branch [
+           set list-of-branches lput branch list-of-branches
+           let coral-clr coral-colour
+           ask branch [set pcolor coral-clr]
+           
+         ] 
+        
        ]
      ]
   ]
@@ -169,6 +218,10 @@ to-report isWater [colour]
      report colour = blue - 2
   ]
 end
+
+to-report isCoral [colour]
+  report colour = green - 4 or colour = green - 3 or colour = green - 2 or colour = green - 1 or colour = green
+end 
 
 ;JELLY functions
 to setup-jellies
@@ -217,7 +270,7 @@ to move-jellies
     
        if ticks mod 4 = 0  [ ; turn every 4 ticks
           ifelse not isWater [pcolor] of patch-ahead 1 [
-           set heading heading - 180
+           set heading heading - ((random 20) + 170)
          ][
            ifelse random-float 1 > 0.5[
              set heading heading + (random max-turn-radius)
@@ -253,6 +306,9 @@ to move-jellies
           set heading 180
           set color red 
           set is-larva true
+       ]
+       if show_labels[
+         set label number-of-fish-eaten
        ]
     ]    
   ]
@@ -348,14 +404,15 @@ to move-fish
     
     
     
-    ifelse not isWater [pcolor] of patch-ahead 1 [
+    ifelse  isWater [pcolor] of patch-ahead 1  or isCoral [pcolor] of patch-ahead 1 [
+      flock
+      
+    ][
       ifelse heading > 90[
         set heading 80
       ][
         set heading 100
-      ]
-    ][
-       flock
+      ] 
     ]
   ]
   ask fishes [ forward 1 ]
@@ -427,7 +484,7 @@ GRAPHICS-WINDOW
 210
 10
 1230
-431
+581
 -1
 -1
 10.0
@@ -443,7 +500,7 @@ GRAPHICS-WINDOW
 0
 100
 0
-38
+53
 0
 0
 1
@@ -459,7 +516,7 @@ water_depth
 water_depth
 5
 300
-23
+45
 1
 1
 NIL
@@ -534,6 +591,7 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "plot count jellies"
 "pen-1" 1.0 0 -7500403 true "" "plot count fishes"
+"pen-2" 1.0 0 -13840069 true "" "plot count patches with [pcolor = green]"
 
 SLIDER
 6
@@ -559,7 +617,7 @@ init_number_of_jellies
 init_number_of_jellies
 0
 300
-12
+13
 1
 1
 NIL
@@ -616,7 +674,7 @@ day
 SWITCH
 8
 556
-125
+131
 589
 show_labels
 show_labels
@@ -663,7 +721,7 @@ percentage_of_coral
 percentage_of_coral
 0
 100
-50
+16
 1
 1
 NIL
@@ -685,13 +743,13 @@ NIL
 HORIZONTAL
 
 SWITCH
-8
-592
-133
-625
+9
+591
+131
+624
 show_current
 show_current
-0
+1
 1
 -1000
 
