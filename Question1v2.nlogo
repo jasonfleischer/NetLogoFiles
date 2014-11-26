@@ -309,17 +309,94 @@ to gen_inputs
   set input-2 item 1 rand-iris
   set input-3 item 2 rand-iris
   set input-4 item 3 rand-iris
+  
+  ask input-node-1 [
+      set activation normalize (item 0 rand-iris) 4.3 7.9
+      set label activation
+    ]
+    ask input-node-2 [ 
+      set activation normalize (item 1 rand-iris) 2 4.4
+      set label activation
+    ]
+    ask input-node-3 [ 
+      set activation normalize (item 2 rand-iris) 1 6.9
+      set label activation
+    ]
+    ask input-node-4 [ 
+      set activation normalize (item 3 rand-iris) 0.1 2.9
+      set label activation
+    ]
+  
+end
+
+to test-all
+  let num-correct 0
+  
+  foreach irises[
+    type ?
+    
+    set input-1 item 0 ?
+    set input-2 item 1 ?
+    set input-3 item 2 ?
+    set input-4 item 3 ?   
+    let answer item 4 ?
+    
+    
+    ask input-node-1 [
+      set activation normalize (item 0 ?) 4.3 7.9
+      set label activation
+    ]
+    ask input-node-2 [ 
+      set activation normalize (item 1 ?) 2 4.4
+      set label activation
+    ]
+    ask input-node-3 [ 
+      set activation normalize (item 2 ?) 1 6.9
+      set label activation
+    ]
+    ask input-node-4 [ 
+      set activation normalize (item 3 ?) 0.1 2.9
+      set label activation
+    ]
+    propagate
+ 
+    let output-list [ ]
+    set output-list lput (step [activation] of output-node-1) output-list
+    set output-list lput (step [activation] of output-node-2) output-list 
+    set output-list lput (step [activation] of output-node-3) output-list
+    
+    let percent calulate-percent output-list (integer-to-answer-list answer)
+    if-else (percent = 100) [
+        print " correct"
+        set num-correct 1 + num-correct  
+    ][
+        print " incorrect"
+    ] 
+  ]
+  type "Number correct: " type num-correct type " out of " print (length irises)
 end
 
 to test
-  let result result-for-inputs input-1 input-2 input-3 input-4
-  let correct? ifelse-value (result = item 4 rand-iris) ["correct"] ["incorrect"]
+  
+  propagate
+  
+  let answer item 4 rand-iris
+  let output-list [ ]
+  set output-list lput (step [activation] of output-node-1) output-list
+  set output-list lput (step [activation] of output-node-2) output-list 
+  set output-list lput (step [activation] of output-node-3) output-list
+  let percent calulate-percent output-list (integer-to-answer-list answer)
+  let correct? ifelse-value (percent = 100) ["CORRECT"] ["INCORRECT"]
   
   user-message (word
     "The expected answer for iris with\nsepal length " input-1 ", sepal width " input-2 
     "\npetal length " input-3 ", petal width " input-4 "\nis " 
-    integer-to-iris-string (item 4 rand-iris) " ("(item 4 rand-iris) ").\n\n"
-    "The network reported " result ", which is " correct? ".")
+    integer-to-iris-string (answer) " (" answer ").\n\n"
+    "Output:\n"
+    output-list 
+    "\nExpected:\n"
+    integer-to-answer-list answer
+    "\n\n" correct? ", percent correct: " percent "%")
 end
 
 to-report result-for-inputs [n1 n2 n3 n4]
@@ -343,6 +420,33 @@ to-report integer-to-iris-string [index] ; index is 0-2
   ]
 end
 
+to-report calulate-percent [output-list expected-list]
+    let number-correct 0
+    if item 0 output-list = item 0 expected-list[
+      set number-correct 1 + number-correct
+    ]
+    if item 1 output-list = item 1 expected-list[
+      set number-correct 1 + number-correct
+    ]
+    if item 2 output-list = item 2 expected-list[
+      set number-correct 1 + number-correct
+    ]
+    report round ((number-correct / 3) * 100)
+end
+
+to-report integer-to-answer-list [index]
+if index = 0 [
+    report [1 0 0]
+  ]
+  if index = 1 [
+    report [0 1 0]
+  ]
+  if index = 2 [
+    report [0 0 1]
+  ]
+end
+
+
 to-report normalize [attr minimum maximum]
   
   report (attr - minimum) / ( maximum - minimum)
@@ -352,13 +456,13 @@ end
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
-335
+245
 10
-728
-303
+708
+350
 -1
 -1
-20.2
+23.84211
 1
 10
 1
@@ -430,10 +534,10 @@ NIL
 1
 
 MONITOR
-662
-279
-719
-324
+500
+355
+557
+400
 output1
 [precision activation 2] of output-node-1
 3
@@ -482,7 +586,7 @@ examples-per-epoch
 examples-per-epoch
 1.0
 1000.0
-500
+533
 1.0
 1
 NIL
@@ -519,10 +623,10 @@ TEXTBOX
 0
 
 SWITCH
-407
-284
-542
-317
+245
+360
+380
+393
 show-weights?
 show-weights?
 0
@@ -552,7 +656,7 @@ INPUTBOX
 807
 214
 input-3
-4.7
+3.5
 1
 0
 Number
@@ -563,7 +667,7 @@ INPUTBOX
 807
 274
 input-4
-1.4
+1
 1
 0
 Number
@@ -574,7 +678,7 @@ INPUTBOX
 807
 94
 input-1
-6.1
+5
 1
 0
 Number
@@ -585,7 +689,7 @@ INPUTBOX
 807
 154
 input-2
-2.9
+2
 1
 0
 Number
@@ -608,10 +712,10 @@ NIL
 1
 
 MONITOR
-547
-279
-657
-324
+385
+355
+495
+400
 target-answer
 integer-to-iris-string target-answer
 17
@@ -619,10 +723,10 @@ integer-to-iris-string target-answer
 11
 
 MONITOR
-662
-334
-724
-379
+560
+355
+622
+400
 output-2
 [precision activation 2] of output-node-2
 17
@@ -630,15 +734,32 @@ output-2
 11
 
 MONITOR
-662
-384
-724
-429
+625
+355
+687
+400
 output-3
 [precision activation 2] of output-node-3
 17
 1
 11
+
+BUTTON
+735
+365
+807
+398
+NIL
+test-all
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
