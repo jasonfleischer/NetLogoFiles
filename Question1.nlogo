@@ -21,7 +21,9 @@ globals [
   input-node-2    
   input-node-3
   input-node-4  
-  output-node-1   
+  output-node-1
+  output-node-2 
+  output-node-3    
 ]
 
 ;;;
@@ -61,14 +63,14 @@ to setup-nodes
   create-input-nodes 1 [ ; sepal length
     setxy -6 4
     set input-node-1 self
-    set activation item 0 rand-iris
+    set activation normalize (item 0 rand-iris) 4.3 7.9
     ;set activation ((random 37) + 43) / 10 ; 4.3 - 7.9
     set label activation
   ]
   create-input-nodes 1 [ ; sepal width
     setxy -6 2
     set input-node-2 self
-    set activation item 1 rand-iris
+    set activation normalize (item 1 rand-iris) 2 4.4
     ;set activation ((random 25) + 20) / 10 ; 2 - 4.4
     set label activation
   ]
@@ -76,7 +78,7 @@ to setup-nodes
   create-input-nodes 1 [ ; petal length
     setxy -6 0
     set input-node-3 self
-    set activation item 2 rand-iris
+    set activation normalize (item 2 rand-iris) 1 6.9
     ;set activation ((random 60) + 10) / 10 ; 1 - 6.9
     set label activation
   ]
@@ -84,7 +86,7 @@ to setup-nodes
   create-input-nodes 1 [ ; petal width
     setxy -6 -2
     set input-node-4 self
-    set activation item 3 rand-iris
+    set activation normalize (item 3 rand-iris) 0.1 2.9
     ;set activation ((random 29) + 1) / 10 ; 0.1 - 2.9
     set label activation
   ]
@@ -97,9 +99,19 @@ to setup-nodes
     set size 1.5
   ]
   create-output-nodes 1 [
-    setxy 5 0
+    setxy 5 -2
     set output-node-1 self
-    set activation random 3
+    set activation random 2
+  ]
+  create-output-nodes 1 [
+    setxy 5 0
+    set output-node-2 self
+    set activation random 2
+  ]
+  create-output-nodes 1 [
+    setxy 5 2
+    set output-node-3 self
+    set activation random 2
   ]
 end
 
@@ -149,22 +161,22 @@ to train
     ;]
     set rand-iris one-of irises
     ask input-node-1 [
-      set activation item 0 rand-iris
+      set activation normalize (item 0 rand-iris) 4.3 7.9
       ;set activation ((random 37) + 43) / 10 ; 4.3 - 7.9
       set label activation
     ]
     ask input-node-2 [ 
-      set activation item 1 rand-iris
+      set activation normalize (item 1 rand-iris) 2 4.4
       ;set activation ((random 25) + 20) / 10 ; 2 - 4.4
       set label activation
     ]
     ask input-node-3 [ 
-      set activation item 2 rand-iris
+      set activation normalize (item 2 rand-iris) 1 6.9
       ;set activation ((random 60) + 10) / 10 ; 1 - 6.9
       set label activation
     ]
     ask input-node-4 [ 
-      set activation item 3 rand-iris
+      set activation normalize (item 3 rand-iris) 0.1 2.9
       ;set activation ((random 29) + 1) / 10 ; 0.1 - 2.9
       set label activation
     ]
@@ -209,12 +221,58 @@ end
 to back-propagate
   let example-error 0
   let answer target-answer
+  let e1 0
+  let e2 0
+
+  
 
   ask output-node-1 [
+    if target-answer = 0 [ set answer 1 ]
+    if target-answer = 1 [ set answer 0 ]
+    if target-answer = 2 [ set answer 0 ]
     set err activation * (1 - activation) * (answer - activation)
-    set example-error example-error + ( (answer - activation) ^ 2 )
+    set example-error example-error + ( (answer - activation) ^ 2 ) / 3
   ]
-  set epoch-error epoch-error + example-error
+  
+  set e1 example-error
+  
+  ask hidden-nodes [
+    set err activation * (1 - activation) * sum [weight * [err] of end2] of my-out-links
+  ]
+  ask links [
+    set weight weight + learning-rate * [err] of end2 * [activation] of end1 / 3
+  ]
+  
+  
+  
+  ask output-node-2 [
+    if target-answer = 0 [ set answer 0 ]
+    if target-answer = 1 [ set answer 1 ]
+    if target-answer = 2 [ set answer 0 ]
+    set err activation * (1 - activation) * (answer - activation)
+    set example-error example-error + ( (answer - activation) ^ 2 ) / 3
+  ]
+  
+  set e2 example-error
+  
+  ask hidden-nodes [
+    set err activation * (1 - activation) * sum [weight * [err] of end2] of my-out-links
+  ]
+  ask links [
+    set weight weight + learning-rate * [err] of end2 * [activation] of end1
+  ]
+  
+  
+  
+  ask output-node-3 [
+    if target-answer = 0 [ set answer 0 ]
+    if target-answer = 1 [ set answer 0 ]
+    if target-answer = 2 [ set answer 1 ]
+    set err activation * (1 - activation) * (answer - activation)
+    set example-error example-error + ( (answer - activation) ^ 2 ) / 3
+  ]
+  
+  set epoch-error epoch-error + ( e1 + e2 + example-error ) / 3
   
   ;; The hidden layer nodes are given error values adjusted appropriately for their
   ;; link weights
@@ -251,24 +309,101 @@ to gen_inputs
   set input-2 item 1 rand-iris
   set input-3 item 2 rand-iris
   set input-4 item 3 rand-iris
+  
+  ask input-node-1 [
+      set activation normalize (item 0 rand-iris) 4.3 7.9
+      set label activation
+    ]
+    ask input-node-2 [ 
+      set activation normalize (item 1 rand-iris) 2 4.4
+      set label activation
+    ]
+    ask input-node-3 [ 
+      set activation normalize (item 2 rand-iris) 1 6.9
+      set label activation
+    ]
+    ask input-node-4 [ 
+      set activation normalize (item 3 rand-iris) 0.1 2.9
+      set label activation
+    ]
+  
+end
+
+to test-all
+  let num-correct 0
+  
+  foreach irises[
+    type ?
+    
+    set input-1 item 0 ?
+    set input-2 item 1 ?
+    set input-3 item 2 ?
+    set input-4 item 3 ?   
+    let answer item 4 ?
+    
+    
+    ask input-node-1 [
+      set activation normalize (item 0 ?) 4.3 7.9
+      set label activation
+    ]
+    ask input-node-2 [ 
+      set activation normalize (item 1 ?) 2 4.4
+      set label activation
+    ]
+    ask input-node-3 [ 
+      set activation normalize (item 2 ?) 1 6.9
+      set label activation
+    ]
+    ask input-node-4 [ 
+      set activation normalize (item 3 ?) 0.1 2.9
+      set label activation
+    ]
+    propagate
+ 
+    let output-list [ ]
+    set output-list lput (step [activation] of output-node-1) output-list
+    set output-list lput (step [activation] of output-node-2) output-list 
+    set output-list lput (step [activation] of output-node-3) output-list
+    
+    let percent calulate-percent output-list (integer-to-answer-list answer)
+    if-else (percent = 100) [
+        print " correct"
+        set num-correct 1 + num-correct  
+    ][
+        print " incorrect"
+    ] 
+  ]
+  type "Number correct: " type num-correct type " out of " print (length irises)
 end
 
 to test
-  let result result-for-inputs input-1 input-2 input-3 input-4
-  let correct? ifelse-value (result = item 4 rand-iris) ["correct"] ["incorrect"]
+  
+  propagate
+  
+  let answer item 4 rand-iris
+  let output-list [ ]
+  set output-list lput (step [activation] of output-node-1) output-list
+  set output-list lput (step [activation] of output-node-2) output-list 
+  set output-list lput (step [activation] of output-node-3) output-list
+  let percent calulate-percent output-list (integer-to-answer-list answer)
+  let correct? ifelse-value (percent = 100) ["CORRECT"] ["INCORRECT"]
   
   user-message (word
     "The expected answer for iris with\nsepal length " input-1 ", sepal width " input-2 
     "\npetal length " input-3 ", petal width " input-4 "\nis " 
-    integer-to-iris-string (item 4 rand-iris) " ("(item 4 rand-iris) ").\n\n"
-    "The network reported " result ", which is " correct? ".")
+    integer-to-iris-string (answer) " (" answer ").\n\n"
+    "Output:\n"
+    output-list 
+    "\nExpected:\n"
+    integer-to-answer-list answer
+    "\n\n" correct? ", percent correct: " percent "%")
 end
 
 to-report result-for-inputs [n1 n2 n3 n4]
-  ask input-node-1 [ set activation n1 ]
-  ask input-node-2 [ set activation n2 ]
-  ask input-node-3 [ set activation n3 ]
-  ask input-node-4 [ set activation n4 ]
+  ask input-node-1 [ set activation normalize n1 4.3 7.9 ]
+  ask input-node-2 [ set activation normalize n2 2 4.4 ]
+  ask input-node-3 [ set activation normalize n3 1 6.9 ]
+  ask input-node-4 [ set activation normalize n4 0.1 2.9 ]
   propagate
   report step [activation] of one-of output-nodes
 end
@@ -285,17 +420,49 @@ to-report integer-to-iris-string [index] ; index is 0-2
   ]
 end
 
+to-report calulate-percent [output-list expected-list]
+    let number-correct 0
+    if item 0 output-list = item 0 expected-list[
+      set number-correct 1 + number-correct
+    ]
+    if item 1 output-list = item 1 expected-list[
+      set number-correct 1 + number-correct
+    ]
+    if item 2 output-list = item 2 expected-list[
+      set number-correct 1 + number-correct
+    ]
+    report round ((number-correct / 3) * 100)
+end
+
+to-report integer-to-answer-list [index]
+if index = 0 [
+    report [1 0 0]
+  ]
+  if index = 1 [
+    report [0 1 0]
+  ]
+  if index = 2 [
+    report [0 0 1]
+  ]
+end
+
+
+to-report normalize [attr minimum maximum]
+  
+  report (attr - minimum) / ( maximum - minimum)
+end
+
 ; Copyright 2006 Uri Wilensky.
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
-233
-11
-549
-276
-8
+245
+10
+708
+350
 -1
-18.0
+-1
+23.84211
 1
 10
 1
@@ -305,7 +472,7 @@ GRAPHICS-WINDOW
 0
 0
 1
--8
+-10
 8
 -5
 7
@@ -350,10 +517,10 @@ NIL
 1
 
 BUTTON
-560
-305
-635
-339
+732
+304
+807
+338
 test
 test
 NIL
@@ -367,12 +534,12 @@ NIL
 1
 
 MONITOR
-490
-280
-547
-325
-output
-[precision activation 2] of one-of output-nodes
+500
+355
+557
+400
+output1
+[precision activation 2] of output-node-1
 3
 1
 11
@@ -419,7 +586,7 @@ examples-per-epoch
 examples-per-epoch
 1.0
 1000.0
-500
+533
 1.0
 1
 NIL
@@ -446,20 +613,20 @@ TEXTBOX
 0
 
 TEXTBOX
-560
-15
-710
-33
+732
+14
+882
+32
 3. Test neural net:
 11
 0.0
 0
 
 SWITCH
-235
-285
-370
-318
+245
+360
+380
+393
 show-weights?
 show-weights?
 0
@@ -484,21 +651,21 @@ NIL
 1
 
 INPUTBOX
-560
-155
-635
-215
+732
+154
+807
+214
 input-3
-6
+5.1
 1
 0
 Number
 
 INPUTBOX
-560
-215
-635
-275
+732
+214
+807
+274
 input-4
 1.8
 1
@@ -506,32 +673,32 @@ input-4
 Number
 
 INPUTBOX
-560
-35
-635
-95
+732
+34
+807
+94
 input-1
-7.2
+5.9
 1
 0
 Number
 
 INPUTBOX
-560
-95
-635
-155
+732
+94
+807
+154
 input-2
-3.2
+3
 1
 0
 Number
 
 BUTTON
-560
-275
-635
-308
+732
+274
+807
+307
 NIL
 gen_inputs
 NIL
@@ -545,102 +712,65 @@ NIL
 1
 
 MONITOR
-375
-280
-485
-325
+385
+355
+495
+400
 target-answer
 integer-to-iris-string target-answer
 17
 1
 11
 
+MONITOR
+560
+355
+622
+400
+output-2
+[precision activation 2] of output-node-2
+17
+1
+11
+
+MONITOR
+625
+355
+687
+400
+output-3
+[precision activation 2] of output-node-3
+17
+1
+11
+
+BUTTON
+735
+365
+807
+398
+NIL
+test-all
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 @#$#@#$#@
-## WHAT IS IT?
+This needs the text file named 'iris.txt'
 
-This is a model of a very small neural network.  It is based on the Perceptron model, but instead of one layer, this network has two layers of "perceptrons".  Furthermore, the layers activate each other in a nonlinear way. These two additions means it can learn operations a single layer cannot.
+'gen-input' button will generate one random input and the 'test' button will display the results of that input
 
-The goal of a network is to take input from its input nodes on the far left and classify those inputs appropriately in the output nodes on the far right.  It does this by being given a lot of examples and attempting to classify them, and having a supervisor tell it if the classification was right or wrong.  Based on this information the neural network updates its weight until it correctly classifies all inputs correctly.
+'test-all' button will test all samples in the input set and display the results in the command center
 
-## HOW IT WORKS
-
-Initially the weights on the links of the networks are random.  
-
-The nodes on the left are the called the input nodes, the nodes in the middle are called the hidden nodes, and the node on the right is called the output node.
-
-The activation values of the input nodes are the inputs to the network. The activation values of the hidden nodes are equal to the activation values of inputs nodes, multiplied by their link weights, summed together, and passed through the [sigmoid function](http://en.wikipedia.org/wiki/Sigmoid_function). Similarly, the activation value of the output node is equal to the activation values of hidden nodes, multiplied by the link weights, summed together, and passed through the sigmoid function. The output of the network is 1 if the activation of the output node is greater than 0.5 and 0 if it is less than 0.5.
-
-The sigmoid function maps negative values to values between 0 and 0.5, and maps positive values to values between 0.5 and 1.  The values increase nonlinearly between 0 and 1 with a sharp transition at 0.5. 
-
-To train the network a lot of inputs are presented to the network along with how the network should correctly classify the inputs.  The network uses a back-propagation algorithm to pass error back from the output node and uses this error to update the weights along each link.
-
-## HOW TO USE IT
-
-To use it press SETUP to create the network and initialize the weights to small random numbers.
-
-Press TRAIN ONCE to run one epoch of training.  The number of examples presented to the network during this epoch is controlled by EXAMPLES-PER-EPOCH slider.
-
-Press TRAIN to continually train the network.
-
-In the view, the larger the size of the link the greater the weight it has.  If the link is red then it has a positive weight.  If the link is blue then it has a negative weight.
-
-If SHOW-WEIGHTS? is on then the links will be labeled with their weights.
-
-To test the network, set INPUT-1 and INPUT-2, then press the TEST button.  A dialog box will appear telling you whether or not the network was able to correctly classify the input that you gave it.
-
-LEARNING-RATE controls how much the neural network will learn from any one example.
-
-TARGET-FUNCTION allows you to choose which function the network is trying to solve.
-
-## THINGS TO NOTICE
-
-Unlike the Perceptron model, this model is able to learn both OR and XOR.  It is able to learn XOR because the hidden layer (the middle nodes) and the nonlinear activation allows the network to draw two lines classifying the input into positive and negative regions.  A perceptron with a linear activation can only draw a single line. As a result one of the nodes will learn essentially the OR function that if either of the inputs is on it should be on, and the other node will learn an exclusion function that if both of the inputs or on it should be on (but weighted negatively).
-
-However unlike the perceptron model, the neural network model takes longer to learn any of the functions, including the simple OR function.  This is because it has a lot more that it needs to learn.  The perceptron model had to learn three different weights (the input links, and the bias link).  The neural network model has to learn ten weights (4 input to hidden layer weights, 2 hidden layer to output weight and the three bias weights).
-
-## THINGS TO TRY
-
-Manipulate the LEARNING-RATE parameter.  Can you speed up or slow down the training?
-
-Switch back and forth between OR and XOR several times during a run.  Why does it take less time for the network to return to 0 error the longer the network runs?
-
-## EXTENDING THE MODEL
-
-Add additional functions for the network to learn beside OR and XOR.  This may require you to add additional hidden nodes to the network.
-
-Back-propagation using gradient descent is considered somewhat unrealistic as a model of real neurons, because in the real neuronal system there is no way for the output node to pass its error back.  Can you implement another weight-update rule that is more valid?
-
-## NETLOGO FEATURES
-
-This model uses the link primitives.  It also makes heavy use of lists.
-
-## RELATED MODELS
-
-This is the second in the series of models devoted to understanding artificial neural networks.  The first model is Perceptron.
-
-## CREDITS AND REFERENCES
-
-The code for this model is inspired by the pseudo-code which can be found in Tom M. Mitchell's "Machine Learning" (1997).
-
-Thanks to Craig Brozefsky for his work in improving this model.
-
-
-## HOW TO CITE
-
-If you mention this model in a publication, we ask that you include these citations for the model itself and for the NetLogo software:
-
-* Rand, W. and Wilensky, U. (2006).  NetLogo Artificial Neural Net - Multilayer model.  http://ccl.northwestern.edu/netlogo/models/ArtificialNeuralNet-Multilayer.  Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
-* Wilensky, U. (1999). NetLogo. http://ccl.northwestern.edu/netlogo/. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
-
-## COPYRIGHT AND LICENSE
-
-Copyright 2006 Uri Wilensky.
-
-![CC BY-NC-SA 3.0](http://i.creativecommons.org/l/by-nc-sa/3.0/88x31.png)
-
-This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 License.  To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/3.0/ or send a letter to Creative Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
-
-Commercial licenses are also available. To inquire about commercial licenses, please contact Uri Wilensky at uri@northwestern.edu.
+100 = Iris-setosa
+010 = Iris-versicolor
+001 = Iris-virginica
 @#$#@#$#@
 default
 true

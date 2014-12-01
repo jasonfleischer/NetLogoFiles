@@ -5,6 +5,7 @@ breed[ fishes fish ]
 
 globals[ day 
          sea-floor-height
+         width_of_world
          air-temperature      
          wind-strength         
          maximum-jelly-turn-radius
@@ -56,6 +57,7 @@ to setup-default-values
   set air-temperature random 25
   set wind-strength random 4
   set sea-floor-height 3
+  set width_of_world 100
   set maximum-jelly-turn-radius 45
   
   ;flocking vars
@@ -686,21 +688,6 @@ max_life_span_of_jellies
 0
 100
 10
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-6
-90
-201
-123
-width_of_world
-width_of_world
-100
-500
-100
 1
 1
 NIL
