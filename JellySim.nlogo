@@ -17,7 +17,7 @@ globals[ day
          max-cohere-turn
 ]
 
-fishes-own[happiness          ; ?? may remove
+fishes-own[
            age                
            lifespan           
            is-female
@@ -122,7 +122,7 @@ to setup-patches
       set num-of-seeds num-of-seeds - 1
       set is-seed true
       set list-of-branches []
-      set max-growth 200 ; todo fix
+      set max-growth 200 ; ;;
       set coral-colour green + (random 5) 
     ]
   ]
@@ -185,9 +185,7 @@ to update-environment
            set list-of-branches lput branch list-of-branches
            let coral-clr coral-colour
            ask branch [set pcolor coral-clr]
-           
          ] 
-        
        ]
      ]
   ]
@@ -267,8 +265,8 @@ to move-jellies
     ][ ; if jelly
     
        if ticks mod 4 = 0  [ ; turn every 4 ticks
-          ifelse not isWater [pcolor] of patch-ahead 1 [
-           set heading heading - ((random 20) + 170)
+         ifelse not isWater [pcolor] of patch-ahead 1 [
+             set heading heading - ((random 20) + 170)
          ][
            ifelse random-float 1 > 0.5[
              set heading heading + (random max-turn-radius)
@@ -277,9 +275,13 @@ to move-jellies
            ]
          ]
        ]
-       if ticks mod 5 = 0  and  isWater [pcolor] of patch-ahead 1  [ ; move every 5 ticks if possible
-          forward 1
+       if ticks mod 5 = 0[; move every 5 ticks if possible
+         if isWater [pcolor] of patch-ahead 1 [  
+           forward 1
+         ]
        ]
+       
+       
     
        if any? fishes-here [ ; eat
           set number-of-fish-eaten number-of-fish-eaten + 1
@@ -571,9 +573,9 @@ NIL
 
 PLOT
 8
-353
+320
 202
-503
+470
 Number of Jellies vs Number of Fish
 NIL
 NIL
@@ -591,14 +593,14 @@ PENS
 
 SLIDER
 6
-159
+126
 202
-192
+159
 init_number_of_fish
 init_number_of_fish
 0
 1000
-1000
+829
 1
 1
 NIL
@@ -606,14 +608,14 @@ HORIZONTAL
 
 SLIDER
 6
-125
+92
 201
-158
+125
 init_number_of_jellies
 init_number_of_jellies
 0
 300
-13
+22
 1
 1
 NIL
@@ -621,14 +623,14 @@ HORIZONTAL
 
 SLIDER
 7
-241
+208
 203
-274
+241
 number_of_ticks_in_a_day
 number_of_ticks_in_a_day
 50
 5000
-50
+82
 1
 1
 NIL
@@ -636,9 +638,9 @@ HORIZONTAL
 
 MONITOR
 62
-507
+474
 112
-552
+519
 Temp
 air-temperature
 17
@@ -647,9 +649,9 @@ air-temperature
 
 MONITOR
 117
-507
+474
 167
-552
+519
 Wind
 wind-strength
 17
@@ -658,9 +660,9 @@ wind-strength
 
 MONITOR
 8
-507
+474
 58
-552
+519
 Day
 day
 17
@@ -669,9 +671,9 @@ day
 
 SWITCH
 8
-556
+523
 131
-589
+556
 show_labels
 show_labels
 1
@@ -680,9 +682,9 @@ show_labels
 
 SLIDER
 7
-277
+244
 202
-310
+277
 max_life_span_of_jellies
 max_life_span_of_jellies
 0
@@ -695,14 +697,14 @@ HORIZONTAL
 
 SLIDER
 6
-197
+164
 202
-230
+197
 percentage_of_coral
 percentage_of_coral
 0
 100
-16
+24
 1
 1
 NIL
@@ -710,9 +712,9 @@ HORIZONTAL
 
 SLIDER
 7
-314
+281
 202
-347
+314
 max_life_span_of_fishes
 max_life_span_of_fishes
 10
@@ -725,9 +727,9 @@ HORIZONTAL
 
 SWITCH
 9
-591
+558
 131
-624
+591
 show_current
 show_current
 1
