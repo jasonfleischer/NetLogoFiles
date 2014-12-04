@@ -9,6 +9,7 @@ globals[ day
          air-temperature      
          wind-strength         
          maximum-jelly-turn-radius
+         ticks-to-digest-fish
          ;flocking variables for fish
          minimum-separation
          vision
@@ -29,6 +30,7 @@ fishes-own[
 jellies-own[age               
             lifespan            
             number-of-fish-eaten
+            digestion-ticks
             max-turn-radius
             is-larva
             ticks-left        
@@ -59,6 +61,7 @@ to setup-default-values
   set sea-floor-height 3
   set width_of_world 100
   set maximum-jelly-turn-radius 45
+  set ticks-to-digest-fish 15
   
   ;flocking vars
   set minimum-separation 1
@@ -122,7 +125,7 @@ to setup-patches
       set num-of-seeds num-of-seeds - 1
       set is-seed true
       set list-of-branches []
-      set max-growth 200 ; ;;
+      set max-growth 150 ; ;;
       set coral-colour green + (random 5) 
     ]
   ]
@@ -138,6 +141,7 @@ to update-environment
            set color white
            set heading 0
            set size 1.5
+           set digestion-ticks 0
            set is-larva false
            set max-turn-radius (random maximum-jelly-turn-radius) + 1
            set number-of-fish-eaten 0
@@ -235,6 +239,7 @@ to setup-jellies
     set is-larva false
     set max-turn-radius (random maximum-jelly-turn-radius) + 1
     set number-of-fish-eaten 0
+    set digestion-ticks 0
     set ticks-left -1 
     set age (random max_life_span_of_jellies) 
     set lifespan (random (max_life_span_of_jellies - age)) + age + 1
@@ -283,10 +288,15 @@ to move-jellies
        
        
     
-       if any? fishes-here [ ; eat
+       if any? fishes-here and digestion-ticks = 0[ ; eat
           set number-of-fish-eaten number-of-fish-eaten + 1
           ask one-of fishes-here [ die ]
+          set digestion-ticks ticks-to-digest-fish
           set lifespan min list (lifespan + 2) max_life_span_of_jellies
+       ]
+       
+       if(digestion-ticks != 0)[
+        set digestion-ticks digestion-ticks - 1 
        ]
     
        if day != floor (ticks / number_of_ticks_in_a_day)[ ; day change
@@ -318,7 +328,7 @@ end
 to setup-fishes
   create-fishes init_number_of_fish[
     
-    set size 1
+    
     let rand-patch one-of patches with [isWater pcolor]
     while [not any? turtles-here] [
       set rand-patch one-of patches with [isWater pcolor]
@@ -344,6 +354,7 @@ to setup-fishes
     if  lifespan >  max_life_span_of_fishes [ ; remove later
         print "error"    
     ]
+    set size calculate-fish-size
   ]
 end
 
@@ -352,6 +363,7 @@ to move-fish
     
     if day != floor (ticks / number_of_ticks_in_a_day)[ ; day change
         set age age + 1
+        set size calculate-fish-size
     ]
     
     if lifespan <= age[ ; die
@@ -395,6 +407,7 @@ to move-fish
            ]
            set heading (random 20) + 85 ; 85 to 105 degrees
            set age 0
+           set size calculate-fish-size
            set lifespan (random max_life_span_of_fishes) + 1
          ]
          
@@ -414,6 +427,10 @@ to move-fish
     ]
   ]
   ask fishes [ forward 1 ]
+end
+
+to-report calculate-fish-size
+  report ((age / max_life_span_of_fishes) * 1.0) + 0.5 ;between 0.5 and 1.5
 end
 
 to flock  ;; turtle procedure
@@ -482,7 +499,7 @@ GRAPHICS-WINDOW
 210
 10
 1230
-581
+571
 -1
 -1
 10.0
@@ -498,7 +515,7 @@ GRAPHICS-WINDOW
 0
 100
 0
-53
+52
 0
 0
 1
@@ -514,7 +531,7 @@ water_depth
 water_depth
 5
 300
-45
+44
 1
 1
 NIL
@@ -615,7 +632,7 @@ init_number_of_jellies
 init_number_of_jellies
 0
 300
-22
+47
 1
 1
 NIL
@@ -704,7 +721,7 @@ percentage_of_coral
 percentage_of_coral
 0
 100
-24
+17
 1
 1
 NIL
