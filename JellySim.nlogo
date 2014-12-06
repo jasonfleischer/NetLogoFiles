@@ -91,7 +91,7 @@ to setup-patches
   ask patches[
     
     if(pycor > sea-floor-height + water_depth)[ ;atmosphere
-      set pcolor blue
+      set pcolor 92
       set temperature air-temperature
     ]
     if(pycor < sea-floor-height)[ ;seafloor
@@ -134,6 +134,11 @@ end
 to update-environment
   
   ask patches [
+     if(pycor > sea-floor-height + water_depth)[ ;atmosphere
+       if-else ( ticks mod number_of_ticks_in_a_day / number_of_ticks_in_a_day ) < 0.5
+       [ set pcolor ( 92 + floor ( 8 * ( ticks mod number_of_ticks_in_a_day ) / number_of_ticks_in_a_day ) )  ]
+       [ set pcolor ( 99 - floor ( 8 * ( ticks mod number_of_ticks_in_a_day ) / number_of_ticks_in_a_day ) )  ]
+     ]  
      if (pcolor = (red - 2)) and ( ticks mod (max_life_span_of_jellies * number_of_ticks_in_a_day * 2) = 0 )[ ; spawn jellies at same time, every max jelly life span * 2
        set pcolor blue - 2
        if not isCoral patch pxcor (pycor + 1) [ ; todo
@@ -499,7 +504,7 @@ GRAPHICS-WINDOW
 210
 10
 1230
-571
+581
 -1
 -1
 10.0
@@ -515,9 +520,9 @@ GRAPHICS-WINDOW
 0
 100
 0
-52
-0
-0
+53
+1
+1
 1
 ticks
 30.0
@@ -531,7 +536,7 @@ water_depth
 water_depth
 5
 300
-44
+45
 1
 1
 NIL
@@ -593,7 +598,7 @@ PLOT
 320
 202
 470
-Number of Jellies vs Number of Fish
+Jellies, Fishes and Coral
 NIL
 NIL
 0.0
@@ -606,7 +611,7 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "plot count jellies"
 "pen-1" 1.0 0 -7500403 true "" "plot count fishes"
-"pen-2" 1.0 0 -13840069 true "" "plot count patches with [pcolor = green]"
+"pen-2" 1.0 0 -13840069 true "" "plot count patches with [pcolor >= green and pcolor <= green + 5]"
 
 SLIDER
 6
@@ -617,7 +622,7 @@ init_number_of_fish
 init_number_of_fish
 0
 1000
-829
+1000
 1
 1
 NIL
@@ -632,7 +637,7 @@ init_number_of_jellies
 init_number_of_jellies
 0
 300
-47
+40
 1
 1
 NIL
@@ -641,13 +646,13 @@ HORIZONTAL
 SLIDER
 7
 208
-203
+205
 241
 number_of_ticks_in_a_day
 number_of_ticks_in_a_day
-50
-5000
-82
+20
+600
+70
 1
 1
 NIL
@@ -706,7 +711,7 @@ max_life_span_of_jellies
 max_life_span_of_jellies
 0
 100
-10
+15
 1
 1
 NIL
@@ -721,7 +726,7 @@ percentage_of_coral
 percentage_of_coral
 0
 100
-17
+10
 1
 1
 NIL
@@ -736,7 +741,7 @@ max_life_span_of_fishes
 max_life_span_of_fishes
 10
 100
-31
+30
 1
 1
 NIL
