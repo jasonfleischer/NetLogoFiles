@@ -248,12 +248,6 @@ to setup-jellies
     set ticks-left -1 
     set age (random max_life_span_of_jellies) 
     set lifespan (random (max_life_span_of_jellies - age)) + age + 1
-    if age >= lifespan [ ; remove later
-      print "error1" 
-    ]
-    if  lifespan >  max_life_span_of_jellies [ ; remove later
-        print "error"    
-    ]
   ]
 end
 
@@ -313,9 +307,6 @@ to move-jellies
            ]
          ] 
        ]
-       if (age > lifespan)[ ; remove later
-         print "error"
-       ]
        
        if(( ticks mod ticks-left = 0 and color = violet)  )[
           set heading 180
@@ -353,12 +344,6 @@ to setup-fishes
     
     set age (random max_life_span_of_fishes) 
     set lifespan (random (max_life_span_of_fishes - age)) + age + 1
-    if age >= lifespan [ ; remove later
-      print "error1" 
-    ]
-    if  lifespan >  max_life_span_of_fishes [ ; remove later
-        print "error"    
-    ]
     set size calculate-fish-size
   ]
 end
@@ -637,11 +622,7 @@ init_number_of_jellies
 init_number_of_jellies
 0
 300
-<<<<<<< Updated upstream
 40
-=======
-0
->>>>>>> Stashed changes
 1
 1
 NIL
@@ -715,11 +696,7 @@ max_life_span_of_jellies
 max_life_span_of_jellies
 0
 100
-<<<<<<< Updated upstream
 15
-=======
-14
->>>>>>> Stashed changes
 1
 1
 NIL
@@ -749,11 +726,7 @@ max_life_span_of_fishes
 max_life_span_of_fishes
 10
 100
-<<<<<<< Updated upstream
 30
-=======
-28
->>>>>>> Stashed changes
 1
 1
 NIL
