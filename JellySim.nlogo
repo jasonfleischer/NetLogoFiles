@@ -151,7 +151,7 @@ to update-environment
            set max-turn-radius (random maximum-jelly-turn-radius) + 1
            set number-of-fish-eaten 0
            set ticks-left -1 
-           set age (random max_life_span_of_jellies) 
+           set age (random (max_life_span_of_jellies / 2)) + (max_life_span_of_jellies / 2) + 1 
            set lifespan (random (max_life_span_of_jellies - age)) + age + 1
          ]
        ]
@@ -166,7 +166,7 @@ to update-environment
        ]
      ]
      
-     if is-seed and ticks mod 10 = 0[ ; try to grow every 10 ticks
+     if is-seed and ticks mod 20 = 0[ ; try to grow every 20 ticks
        if length list-of-branches < max-growth[ 
        
          let branch nobody
@@ -275,8 +275,8 @@ to move-jellies
     ][ ; if jelly
     
        if ticks mod 4 = 0  [ ; turn every 4 ticks
-         ifelse not isWater [pcolor] of patch-ahead 1 [
-             set heading heading - ((random 20) + 170)
+         ifelse not isWater [pcolor] of patch-ahead 1  [
+             set heading heading - ((random 20) + 170) ; turn around
          ][
            ifelse random-float 1 > 0.5[
              set heading heading + (random max-turn-radius)
@@ -384,7 +384,7 @@ to move-fish
           if 
           count flock-mates >= 2 and count flock-mates < 10 and
           age > max_life_span_of_fishes * .5  and [age] of nearest-neighbor > max_life_span_of_fishes * .5 and
-          age < max_life_span_of_fishes * .75 and [age] of nearest-neighbor < max_life_span_of_fishes * .75 and
+          age < max_life_span_of_fishes * .75 and [age] of nearest-neighbor < max_life_span_of_fishes * .8 and
           not [is-female] of nearest-neighbor 
           [ 
             
@@ -637,7 +637,11 @@ init_number_of_jellies
 init_number_of_jellies
 0
 300
+<<<<<<< Updated upstream
 40
+=======
+0
+>>>>>>> Stashed changes
 1
 1
 NIL
@@ -711,7 +715,11 @@ max_life_span_of_jellies
 max_life_span_of_jellies
 0
 100
+<<<<<<< Updated upstream
 15
+=======
+14
+>>>>>>> Stashed changes
 1
 1
 NIL
@@ -741,7 +749,11 @@ max_life_span_of_fishes
 max_life_span_of_fishes
 10
 100
+<<<<<<< Updated upstream
 30
+=======
+28
+>>>>>>> Stashed changes
 1
 1
 NIL
