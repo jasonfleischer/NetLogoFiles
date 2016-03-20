@@ -1,5 +1,5 @@
 NetLogoFiles
 ============
 
-NetLog Projects
+NetLogo Projects
 
