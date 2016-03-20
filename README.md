@@ -1,6 +1,5 @@
 NetLogoFiles
 ============
 
-NetLog Files
+NetLog Projects
 
-JellySim
