@@ -26,11 +26,11 @@ Uses weighted edges to eventually learn a desired outcome
 
 Smooths out the colors in a grid
 
-#### Notes
+### Notes:
 
 - Files were created with NetLogo version 5.1 but can run on NetLogo version 6.1.1
 - These files were created for university assignments / projects with the purpose of understanding machine learning concepts
 
-### Jellyfish Simulator Screen Shot
+### Jellyfish Simulator Screen Shot:
 
 ![jelly](screenshots/jellyfish.png "jelly")
