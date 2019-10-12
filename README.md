@@ -2,9 +2,7 @@
 
 ### Setup:
 
-1. Install the NetLogo application found here:
-
-https://ccl.northwestern.edu/netlogo/ 
+1. Install the NetLogo application found [here](https://ccl.northwestern.edu/netlogo/)
 
 2. Open one of the .nlogo files with the NetLogo application
 
