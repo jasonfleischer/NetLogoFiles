@@ -1,7 +1,6 @@
-Net Logo Projects
-=================
+# Net Logo Projects
 
-## Setup
+### Setup
 
 1. Install the NetLogo application found here:
 https://ccl.northwestern.edu/netlogo/ 
@@ -13,9 +12,9 @@ https://ccl.northwestern.edu/netlogo/
 4. Run by pressing a 'go' or 'train' button
 
 
-## NetLogo files (.nlogo)
+### NetLogo files (.nlogo)
 
-### JellySim.nlogo
+#### JellySim.nlogo
 
 Simulates the lifecycle of jellyfish, coral and fish
 
@@ -27,11 +26,11 @@ Uses weighted edges to eventually learn a desired outcome
 
 Smooths out the colors in a grid
 
-## Notes
+### Notes
 
 - Files were created with NetLogo version 5.1 but can run on NetLogo version 6.1.1
 - These files were created for university assignments / projects with the purpose of understanding machine learning concepts
 
-# JellySim Screen Shot
+### JellySim Screen Shot
 
 ![alt text](screenshots/jellyfish.png "jelly")
